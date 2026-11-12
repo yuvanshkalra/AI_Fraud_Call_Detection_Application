@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <application>
+        <!--
+            Handles the "Dismiss" action from fraud-alert notifications.
+            Not exported — only the app's own PendingIntent can trigger it.
+        -->
+        <receiver
+            android:name="com.fraudcalldetector.feature.notifications.NotificationDismissReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.fraudcalldetector.notifications.DISMISS_ALERT" />
+            </intent-filter>
+        </receiver>
+    </application>
+
+</manifest>

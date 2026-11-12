@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- ── Hardware feature declaration ──────────────────────────────────── -->
+    <!--
+        required="false" allows the app to be installed on tablets and devices
+        without a cellular radio (for testing / analysis of saved recordings).
+    -->
+    <uses-feature
+        android:name="android.hardware.telephony"
+        android:required="false" />
+
+    <!-- ── Telephony ──────────────────────────────────────────────────────── -->
+    <!-- READ_PHONE_STATE: detect call state changes via TelephonyManager     -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <!-- READ_CALL_LOG: recover caller number + direction from CallLog        -->
+    <uses-permission android:name="android.permission.READ_CALL_LOG" />
+    <!--
+        PROCESS_OUTGOING_CALLS was deprecated in API 29 (Android 10) and
+        removed from enforcement in API 33+. Outgoing calls are now detected
+        via CALL_STATE_OFFHOOK + CallLog. This permission is intentionally
+        omitted to avoid lint warnings on API 29+ devices.
+    -->
+    <uses-permission android:name="android.permission.CALL_PHONE" />
+    <!--
+        MANAGE_OWN_CALLS: required alongside FOREGROUND_SERVICE_PHONE_CALL
+        when foregroundServiceType="phoneCall" is declared (API 34+).
+        The app does not host a ConnectionService — this permission satisfies
+        the platform requirement without becoming a default calling app.
+    -->
+    <uses-permission android:name="android.permission.MANAGE_OWN_CALLS" />
+
+    <!-- ── Recording ─────────────────────────────────────────────────────── -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- Legacy external storage — scoped storage applies on API 29+          -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+
+    <!-- ── Network & Notifications ───────────────────────────────────────── -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!-- Required for foreground service that monitors phone calls (API 34+)  -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
+
+    <!-- ── Boot receiver ─────────────────────────────────────────────────── -->
+    <!-- Allows CallStateReceiver to restart monitoring after device reboot    -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <application
+        android:name=".FraudCallApplication"
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.FraudCallDetector"
+        tools:targetApi="31">
+
+        <!-- ── Main Activity ────────────────────────────────────────────── -->
+        <!--
+            singleTop: ensures onNewIntent() is called when a notification
+            deep-link arrives while the Activity is already at the top of the
+            back stack, preventing duplicate Activity creation.
+        -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.FraudCallDetector.SplashScreen"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- ── Call Monitor Service (:feature:callmonitor) ──────────────── -->
+        <!--
+            Foreground service that holds TelephonyStateListener alive for the
+            duration of call monitoring. Declared with type="phoneCall" so it
+            can acquire FOREGROUND_SERVICE_PHONE_CALL on API 34+.
+            MANAGE_OWN_CALLS (declared above) satisfies the companion-permission
+            requirement for this foreground service type.
+        -->
+        <service
+            android:name="com.fraudcalldetector.feature.callmonitor.service.CallMonitorService"
+            android:exported="false"
+            android:foregroundServiceType="phoneCall" />
+
+        <!-- ── Phone State Broadcast Receiver (:feature:callmonitor) ────── -->
+        <!--
+            Receives PHONE_STATE broadcasts for legacy compatibility on
+            pre-API-31 devices. On API 31+ TelephonyCallback is preferred and
+            this receiver acts as a no-op safety net.
+        -->
+        <!--
+            CallStateReceiver must be exported=true to receive system broadcasts
+            (PHONE_STATE, BOOT_COMPLETED, LOCKED_BOOT_COMPLETED) from the OS.
+            The feature module declares exported=true; tools:replace makes this
+            app-manifest declaration win the merge unambiguously.
+        -->
+        <receiver
+            android:name="com.fraudcalldetector.feature.callmonitor.receiver.CallStateReceiver"
+            android:exported="true"
+            tools:replace="android:exported">
+            <intent-filter>
+                <action android:name="android.intent.action.PHONE_STATE" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+    </application>
+
+</manifest>

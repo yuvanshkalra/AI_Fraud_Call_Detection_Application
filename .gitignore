@@ -1,0 +1,45 @@
+
+# Gradle generated files
+.gradle/
+**/build/
+
+# Keep Gradle wrapper
+!gradle/wrapper/gradle-wrapper.jar
+
+# Android local configuration
+local.properties
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+out/
+
+# Android generated files
+*.apk
+*.aab
+*.ap_
+*.dex
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Logs
+*.log
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+*.jks
+*.keystore
+keystore.properties
+secrets.properties
+
+# Operating system files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Temporary files
+tmp/
+temp/

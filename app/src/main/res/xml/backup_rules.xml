@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Full-backup rules (pre-API-31 legacy attribute: android:fullBackupContent).
+    On API 31+ the system uses data_extraction_rules.xml instead; this file
+    is kept for backwards compatibility with API 26-30 devices.
+-->
+<full-backup-content>
+    <!--
+        Exclude all shared preferences — they contain sensitive config such as
+        alert thresholds and API keys read from DataStore / SharedPreferences.
+    -->
+    <exclude domain="sharedpref" path="." />
+    <!-- Exclude the Room databases — they are re-built from a fresh install -->
+    <exclude domain="database" path="." />
+    <!-- Exclude recorded audio chunks — large and contain personal call data -->
+    <exclude domain="file" path="audio_recordings/" />
+</full-backup-content>

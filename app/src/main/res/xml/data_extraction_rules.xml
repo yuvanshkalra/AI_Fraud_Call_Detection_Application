@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Data-extraction rules for API 31+ (android:dataExtractionRules).
+    Controls both cloud backup (Google One) and device-to-device transfer.
+    Both <cloud-backup> and <device-transfer> blocks are required.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <!-- Exclude sensitive prefs (alert config, API keys) from cloud backup -->
+        <exclude domain="sharedpref" path="." />
+        <!-- Exclude Room databases — rebuilt on fresh install -->
+        <exclude domain="database" path="." />
+        <!-- Exclude audio recordings — large personal data -->
+        <exclude domain="file" path="audio_recordings/" />
+    </cloud-backup>
+
+    <device-transfer>
+        <!-- Do not transfer any app data during device migration -->
+        <exclude domain="root" path="." />
+    </device-transfer>
+</data-extraction-rules>

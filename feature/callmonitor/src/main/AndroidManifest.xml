@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Telephony permissions -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.READ_CALL_LOG" />
+
+    <!--
+        PROCESS_OUTGOING_CALLS was removed in Android 10 (API 29).
+        Outgoing calls are now detected via TelephonyCallback/PhoneStateListener
+        CALL_STATE_OFFHOOK transition + CallLogResolver.
+    -->
+
+    <!-- Foreground service -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
+
+    <!-- Boot-start: restart monitoring after reboot -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <application>
+
+        <!--
+            CallStateReceiver
+            ─────────────────
+            • BOOT_COMPLETED / LOCKED_BOOT_COMPLETED  → cold-start the service
+            • PHONE_STATE                              → wake service on OEMs that kill it
+
+            android:exported="true" is required for system broadcasts.
+            No data/scheme filter → not exploitable as an attack surface.
+        -->
+        <receiver
+            android:name=".receiver.CallStateReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
+                <action android:name="android.intent.action.PHONE_STATE" />
+            </intent-filter>
+        </receiver>
+
+        <!--
+            CallMonitorService
+            ──────────────────
+            foregroundServiceType="phoneCall" is required for the foreground
+            service to have FOREGROUND_SERVICE_PHONE_CALL capability on API 34+.
+        -->
+        <service
+            android:name=".service.CallMonitorService"
+            android:foregroundServiceType="phoneCall"
+            android:exported="false"
+            android:stopWithTask="false" />
+
+    </application>
+
+</manifest>
